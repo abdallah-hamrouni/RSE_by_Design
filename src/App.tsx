@@ -85,6 +85,16 @@ function AppContent() {
           </button>
         </div>
       )}
+       {isQuizView && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => navigate(PATH_LANDING)}
+            className="inline-flex items-center space-x-2 bg-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition-colors text-sm transform hover:scale-105"
+          >
+            ← Retour à l'accueil
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -70,6 +70,7 @@ const MOCK_INITIATIVES: InitiativeWithDetails[] = [
     profiles: { id: 'user-b', full_name: 'Mme. Leclerc', organization: 'Clinique Alpha' },
     user_voted: true,
   },
+  // Tu peux ajouter plus d'initiatives ici pour tester la pagination
 ];
 
 const MOCK_STATS: Stats = {
@@ -84,6 +85,13 @@ export function Dashboard() {
   const [initiatives, setInitiatives] = useState<InitiativeWithDetails[]>([]);
   const [stats, setStats] = useState<Stats>(MOCK_STATS);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // NEW : état du moteur de recherche
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // --- Pagination ---
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setInitiatives(MOCK_INITIATIVES);
@@ -121,9 +129,32 @@ export function Dashboard() {
     }));
   };
 
+  // --- Filtrage avec moteur de recherche ---
+  const filteredInitiatives = initiatives.filter(init => {
+    const q = searchQuery.toLowerCase();
+    return (
+      init.title.toLowerCase().includes(q) ||
+      init.description.toLowerCase().includes(q) ||
+      init.categories?.name.toLowerCase().includes(q) ||
+      init.profiles?.full_name.toLowerCase().includes(q)
+    );
+  });
+
+  // --- Pagination logic ---
+  const totalPages = Math.ceil(filteredInitiatives.length / ITEMS_PER_PAGE);
+  const paginatedInitiatives = filteredInitiatives.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
@@ -146,12 +177,22 @@ export function Dashboard() {
           ))}
         </div>
 
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 flex justify-between items-center">
+        {/* Header + Recherche */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Initiatives RSE</h2>
             <p className="text-gray-600 mt-1">Découvrez et soutenez les projets de la communauté</p>
           </div>
+
+          {/* MOTEUR DE RECHERCHE */}
+          <input
+            type="text"
+            placeholder="Rechercher une initiative..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          />
+
           <button
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all transform hover:scale-105"
@@ -162,26 +203,49 @@ export function Dashboard() {
         </div>
 
         {/* Liste */}
-        {initiatives.length === 0 ? (
+        {paginatedInitiatives.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune initiative pour le moment</h3>
-            <p className="text-gray-600 mb-6">Soyez le premier à proposer une initiative RSE !</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Créer une initiative</span>
-            </button>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune initiative trouvée</h3>
+            <p className="text-gray-600 mb-6">Essayez un autre mot-clé.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {initiatives.map(init => (
+            {paginatedInitiatives.map(init => (
               <InitiativeCard key={init.id} initiative={init} onVoteChange={() => handleVote(init.id)} />
             ))}
           </div>
         )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6 space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            >
+              Précédent
+            </button>
+            {[...Array(totalPages)].map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handlePageChange(idx + 1)}
+                className={`px-3 py-1 rounded ${currentPage === idx + 1 ? 'bg-emerald-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            >
+              Suivant
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Modal */}

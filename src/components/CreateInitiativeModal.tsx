@@ -78,7 +78,7 @@ export function CreateInitiativeModal({ isOpen, onClose, onSuccess }: Props) {
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          📝 Créer une initiative
+           Créer une initiative
         </h2>
 
         <div className="flex flex-col space-y-4">
@@ -133,7 +133,7 @@ export function CreateInitiativeModal({ isOpen, onClose, onSuccess }: Props) {
             onClick={handleSubmit}
             className="bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-all shadow-md hover:shadow-lg"
           >
-            🚀 Créer l'initiative
+             Créer l'initiative
           </button>
         </div>
       </div>
